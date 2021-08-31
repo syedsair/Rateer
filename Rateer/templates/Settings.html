@@ -1,0 +1,250 @@
+{% extends 'Base.html' %}
+
+{% block content %}
+<div class="container">
+	<div class="jumbotron col-md-12">
+	  <h1 class="display-4">Privacy Settings</h1>
+	  <h2 class="display-4">{{ message }}</h2>
+	</div>
+
+
+
+	<div class="jumbotron col-md-12" onload="setValues()">
+			<div class="" >
+				  	<div class="container">
+						<form class="privacyForm" action="/home/setprivacy/" method="post">
+						  {% csrf_token %}
+
+
+							{% if privacy.Email %}
+								<div class="form-check col-md-6 col-sm-6 col-xs-6">
+								  <input checked="true" class="emailCheck" class="form-check-input" id="emailCheck1" name="email" type="checkbox"
+										 value="">
+								  <label class="form-check-label" for="emailCheck1">
+									Show Email
+								  </label>
+								</div>
+							{% else %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+								  <input class="emailCheck" class="form-check-input" id="emailCheck2" name="email" type="checkbox"
+										 value="">
+								  <label class="form-check-label" for="emailCheck2">
+									Show Email
+								  </label>
+								</div>
+							{% endif %}
+
+
+
+
+							{% if privacy.Age %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input checked="true" class="form-check-input" type="checkbox" name="age" value="" id="ageCheck">
+							  <label class="form-check-label" for="ageCheck">
+								Show Age
+							  </label>
+							</div>
+							{% else %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input class="form-check-input" type="checkbox" name="age" value="" id="ageCheck2">
+							  <label class="form-check-label" for="ageCheck2">
+								Show Age
+							  </label>
+							</div>
+							{% endif %}
+
+							<br>
+
+
+
+							{% if privacy.Address %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input checked="true" class="form-check-input" type="checkbox" name="address" value="" id="addressCheck">
+							  <label class="form-check-label" for="addressCheck">
+								Show Address
+							  </label>
+							</div>
+							{% else %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input class="form-check-input" type="checkbox" name="address" value="" id="addressCheck2">
+							  <label class="form-check-label" for="addressCheck2">
+								Show Address
+							  </label>
+							</div>
+							{% endif %}
+
+
+
+							{% if privacy.Phone %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input checked="true" class="form-check-input" type="checkbox" name="phone" value="" id="phoneCheck">
+							  <label class="form-check-label" for="phoneCheck">
+								Show Phone
+							  </label>
+							</div>
+							{% else %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input class="form-check-input" type="checkbox" name="phone" value="" id="phoneCheck2">
+							  <label class="form-check-label" for="phoneCheck2">
+								Show Phone
+							  </label>
+							</div>
+							{% endif %}
+
+							<br>
+
+
+							{% if privacy.Profession %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input checked="true" class="form-check-input" type="checkbox" name="profession" value="" id="professionCheck">
+							  <label class="form-check-label" for="professionCheck">
+								Show Profession
+							  </label>
+							</div>
+							{% else %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input class="form-check-input" type="checkbox" name="profession" value="" id="professionCheck2">
+							  <label class="form-check-label" for="professionCheck2">
+								Show Profession
+							  </label>
+							</div>
+							{% endif %}
+
+
+
+
+							{% if privacy.Educations %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input checked="true" class="form-check-input" type="checkbox" name="education" value="" id="educationCheck">
+							  <label class="form-check-label" for="educationCheck">
+								Show Education
+							  </label>
+							</div>
+
+							{% else %}
+							<div class="form-check col-md-6 col-sm-6 col-xs-6">
+							  <input class="form-check-input" type="checkbox" name="education" value="" id="educationCheck2">
+							  <label class="form-check-label" for="educationCheck2">
+								Show Education
+							  </label>
+							</div>
+							<br>
+							{% endif %}
+							<br>
+
+
+
+							{% if privacy.Hobbies %}
+							<div class="form-check col-md-12 col-sm-12 col-xs-12">
+							  <input checked="true" class="form-check-input" type="checkbox" name="hobbies" value="" id="hobbiesCheck">
+							  <label class="form-check-label" for="hobbiesCheck">
+								Show Hobbies
+							  </label>
+							</div>
+							{% else %}
+							<div class="form-check col-md-12 col-sm-12 col-xs-12">
+							  <input class="form-check-input" type="checkbox" name="hobbies" value="" id="hobbiesCheck2">
+							  <label class="form-check-label" for="hobbiesCheck2">
+								Show Hobbies
+							  </label>
+							</div>
+							{% endif %}
+
+
+
+
+							<div class="form-row text-center">
+								<div class="col-12">
+									<button type="submit" class="btn btn-primary  mx-auto d-block">Save Settings</button></br>
+								</div>
+							 </div>
+						</form>
+					</div>
+	   		</div>
+
+  	</div>
+
+
+
+</div>
+
+<script>
+$(".privacyForm").submit(function (e) {
+        e.preventDefault();
+        var serializedData = $(this).serialize();
+        var email = $(this[name='email']);
+        var age = $(this[name='age']);
+        var address = $(this[name='address']);
+        var profession = $(this[name='profession']);
+        var hobbies = $(this[name='hobbies']);
+        var education = $(this[name='education']);
+        var phone = $(this[name='phone']);
+
+        if(email.prop("checked") == true){
+                serializedData += "&email=checked"
+        }
+        else {
+        		serializedData += "&email=unchecked"
+        }
+
+        if(age.prop("checked") == true){
+                serializedData += "&age=checked"
+        }
+        else {
+        		serializedData += "&age=unchecked"
+        }
+
+        if(address.prop("checked") == true){
+                serializedData += "&address=checked"
+        }
+        else {
+        		serializedData += "&address=unchecked"
+        }
+
+        if(phone.prop("checked") == true){
+                serializedData += "&phone=checked"
+        }
+        else {
+        		serializedData += "&phone=unchecked"
+        }
+
+        if(profession.prop("checked") == true){
+                serializedData += "&profession=checked"
+        }
+        else {
+        		serializedData += "&profession=unchecked"
+        }
+
+        if(hobbies.prop("checked") == true){
+                serializedData += "&hobbies=checked"
+        }
+        else {
+        		serializedData += "&hobbies=unchecked"
+        }
+
+        if(education.prop("checked") == true){
+                serializedData += "&education=checked"
+        }
+        else {
+        		serializedData += "&education=unchecked"
+        }
+
+
+        $.ajax({
+            type: 'POST',
+            url: "/home/setprivacy/",
+            data: serializedData,
+            success: function (response) {
+				alert("Settings Saved!")
+            },
+            error: function (response) {
+                alert(response["responseJSON"]["error"]);
+            }
+        })
+
+    })
+</script>
+{% endblock content %}
+
+
+

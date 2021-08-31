@@ -1,0 +1,44 @@
+{% extends 'Base.html' %}
+{% block content %}
+
+<div class="container">
+	<!------------------------------------------------------->
+	<div class="col-md-12">
+	<div style="" class="jumbotron text-center">
+                <form method="post" action="/friends/find/">
+                {% csrf_token %}
+              <div class="form-group">
+                <input type="text" name="queryname" placeholder="Search by Username" value="" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+	</div>
+	</div>
+	<br>
+<div class="row">
+	{% if response_list %}
+	{% for obj in response_list %}
+<div class="col-md-4">
+    <div class="col-md-12">
+		<div class="jumbotron text-center">
+			<h3><b>{{ obj.ThisUser.username }}</b></h3>
+			<img class = "MediumAvatar" src="{{ obj.ProfilePicture.url }}" alt="Post Content"/>
+			<br><br>
+
+			<div class="dropdown">
+			  <button class="btn btn-primary">Options</button>
+			  <div class="dropdown-content">
+				<a href="/friends/{{ obj.ThisUser.username }}/">View Profile</a>
+				<a href="/messenger/chat/{{ obj.ThisUser.username }}">Chat</a>
+			  </div>
+			</div>
+
+		</div>
+	</div>
+</div>
+	{% endfor %}
+	{% endif %}
+</div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% if messages %}
+			{% for message in messages %}
+				{% if message.Sender == person.ThisUser %}
+					<div class="messageContainer darker">
+					  <img src="{{ person.ProfilePicture.url }}" alt="Avatar" class="right">
+					  <p>{{ message.Message }}</p>
+					  <span class="time-left">{{ message.Time.day }}/{{ message.Time.month }}/{{ message.Time.year }} {{ message.Time.hour }}:{{ message.Time.minute }}:{{ message.Time.second }}</span>
+					</div>
+				{% else %}
+					<div class="messageContainer">
+					  <img src="{{ person2.ProfilePicture.url }}" alt="Avatar">
+					  <p>{{ message.Message }}</p>
+					  <span class="time-right">{{ message.Time.day }}/{{ message.Time.month }}/{{ message.Time.year }} {{ message.Time.hour }}:{{ message.Time.minute }}:{{ message.Time.second }}</span>
+					</div>
+				{% endif %}
+			{% endfor %}
+		{% endif %}
