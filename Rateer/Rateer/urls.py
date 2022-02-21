@@ -8,6 +8,7 @@ from NewsFeed import urls as nf_urls
 from Dashboard import urls as dashboard_urls
 from Friends import urls as friends_urls
 from Messenger import urls as messenger_urls
+from Api import urls as api_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,5 +19,6 @@ urlpatterns = [
     path('newsfeed/', include(nf_urls, namespace='NewsFeed')),
     path('friends/', include(friends_urls, namespace="Friends")),
     path('messenger/', include(messenger_urls, namespace="Messenger")),
+    path('api/', include(api_urls))
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

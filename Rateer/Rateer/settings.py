@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'Messenger',
     'Posts',
     'NewsFeed',
+    'Api',
 
     'django.contrib.admin',
     'django.contrib.auth',
