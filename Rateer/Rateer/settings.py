@@ -33,12 +33,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'Home',
-    'Dashboard',
-    'Friends',
-    'Messenger',
-    'Posts',
-    'NewsFeed',
     'Api',
 
     'django.contrib.admin',
@@ -139,3 +133,10 @@ STATICFILES_DIRS = [
 ]
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'nuces.fastnet@gmail.com'
+EMAIL_HOST_PASSWORD = '5prNf9u#D9sY3wWf'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
