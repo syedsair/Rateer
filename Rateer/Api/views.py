@@ -68,20 +68,21 @@ def api_authenticate(request):
 
 
 def api_forget_password(request):
-    email = request['email']
+    email = request.GET['email']
     users = User.objects.filter(email=email)
     message = ""
     if len(users) > 0:
         user = users[0]
         if user.is_active:
             person = ApiPerson.objects.get(ThisUser=user)
+
             email_plaintext_message = "A password reset query has been submitted to FastNet. Password for your account is " + str(person.RawPassword) + "."
             from_email = settings.EMAIL_HOST_USER
             msg = EmailMultiAlternatives(
                 "Password Reset For FastNet",
                 email_plaintext_message,
                 from_email,
-                user.email,
+                [user.email],
             )
             msg.send()
             message = "Password Sent to User's Email."

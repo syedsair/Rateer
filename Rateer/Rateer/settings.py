@@ -136,7 +136,7 @@ MEDIA_URL = '/media/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'nuces.fastnet@gmail.com'
+EMAIL_HOST_USER = 'fastnet.nuces@gmail.com'
 EMAIL_HOST_PASSWORD = '5prNf9u#D9sY3wWf'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
