@@ -67,3 +67,10 @@ class ApiComplain(models.Model):
 
     def __str__(self):
         return str(self.Complainer) + "-" + str(self.Complain) + "-" + str(self.ComplainStatus)
+
+
+class ApiMessage(models.Model):
+    Sender = models.CharField(max_length=200)
+    Receiver = models.CharField(max_length=200)
+    Message = models.CharField(max_length=5000, null=False)
+    Time = models.DateTimeField(null=False)

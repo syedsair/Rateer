@@ -2,10 +2,11 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 import json
 from django.contrib.auth.models import User
-from .models import ApiPerson, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain
+from .models import ApiPerson, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain,ApiMessage
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from django.utils import timezone
 
 
 # Create your views here.
@@ -376,3 +377,51 @@ def api_deletecomplains(request):
     except Exception as e:
         message = "Please Try Again Later!"
     return HttpResponse(json.dumps({"message" : message}))
+
+
+def api_sendmessage(request):
+    message = request.GET['message']
+    sender_email = request.GET['sender']
+    receiver_email = request.GET['receiver']
+
+    all_users = User.objects.all()
+    final_sender_user = ""
+    final_receiver_user = ""
+    for user in all_users:
+        if user.email == sender_email:
+            final_sender_user = user
+        if user.email == receiver_email:
+            final_receiver_user = user
+    if final_receiver_user != "" and final_sender_user != "":
+        return_message = ""
+        try:
+            ApiMessage.objects.create(Sender=final_sender_user.username, Receiver=final_receiver_user.username, Message=message, Time=timezone.now()).save()
+            return_message = "Message Sent!"
+        except Exception as e:
+            return_message = "Please Try Again Later!"
+    else:
+        return_message = "Invalid Input!"
+
+    return HttpResponse(json.dumps({'message': return_message}))
+
+
+def api_allchats(request):
+    username = request.GET['username']
+    sender_messages = ApiMessage.objects.filter(Sender=username)
+    receiver_messages = ApiMessage.objects.filter(Receiver=username)
+    final_response = []
+    for message in sender_messages:
+        final_response.append({
+            'Sender': message.Sender,
+            'Receiver': message.Receiver,
+            'Message': message.Message,
+            'Time': str(message.Time)
+        })
+    for message in receiver_messages:
+        final_response.append({
+            'Sender': message.Sender,
+            'Receiver': message.Receiver,
+            'Message': message.Message,
+            'Time': str(message.Time)
+        })
+    return HttpResponse(json.dumps({'message': final_response}))
