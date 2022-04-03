@@ -335,8 +335,9 @@ def api_savecomplain(request):
     try:
         userId = request.GET["username"]
         complain = request.GET["complain"]
+        title = request.GET['title']
         status = "Submitted"
-        ApiComplain.objects.create(Complain=complain, Complainer=userId, ComplainStatus=status).save()
+        ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status).save()
         message = 'Complain Recorded!'
     except Exception as e:
         message = 'Please Try Again Later!'
@@ -350,6 +351,8 @@ def api_getcomplains(request):
     complains = []
     for complainObj in complainObjects:
         d = {
+            'ComplainId': complainObj.ComplainId,
+            'Title': complainObj.Title,
             'Complain': complainObj.Complain,
             'Status': complainObj.ComplainStatus
         }

@@ -60,6 +60,7 @@ class ApiGroupPosts(models.Model):
 
 class ApiComplain(models.Model):
     ComplainId = models.AutoField(primary_key=True)
+    Title = models.CharField(max_length=512)
     Complain = models.CharField(max_length=2048)
     ComplainStatus = models.CharField(max_length=500, choices=ComplainStatusChoices)
     Complainer = models.CharField(max_length=200)
