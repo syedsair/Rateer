@@ -40,26 +40,35 @@ def api_authenticate(request):
         'message': "",
         'role': ""
     }
-    username = request.GET["username"]
+    email = request.GET["email"]
     password = request.GET["password"]
 
-    user = authenticate(username=username, password=password)
-    if user:
-        thisuser = User.objects.get(username=username)
-        if thisuser.is_active:
+    all_users = User.objects.filter()
+    final_user = ""
+    final_person = ""
+    for user in all_users:
+
+        if user.email == email:
+            final_user = user
+            final_person = ApiPerson.objects.get(ThisUser=final_user)
+            if final_person.RawPassword == password:
+                break
+            else:
+                final_person = ""
+                final_user = ""
+
+    if final_user != "":
+        if final_user.is_active:
             data['message'] = "Authenticated"
-            login(request, user)
-
-            thisperson = ApiPerson.objects.get(ThisUser=thisuser)
-
-            data['email'] = thisperson.ThisUser.email
-            data['name'] = thisperson.Name
-            data['role'] = thisperson.Role
-            data['age'] = thisperson.Age
-            data['status'] = thisperson.Status
-            data['address'] = thisperson.Address
-            data['phone'] = thisperson.Phone
-            data['gender'] = thisperson.Gender
+            login(request, final_user)
+            data['email'] = final_person.ThisUser.email
+            data['name'] = final_person.Name
+            data['role'] = final_person.Role
+            data['age'] = final_person.Age
+            data['status'] = final_person.Status
+            data['address'] = final_person.Address
+            data['phone'] = final_person.Phone
+            data['gender'] = final_person.Gender
         else:
             message = "User Blocked by Admin!"
     else:
