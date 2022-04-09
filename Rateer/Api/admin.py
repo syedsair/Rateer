@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ApiPost, ApiPerson, ApiGroup,ApiGroupMembers,ApiGroupPosts,ApiComplain,ApiMessage
+from .models import ApiPost, ApiPerson, ApiGroup,ApiGroupMembers,ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments
 
 # Register your models here.
 admin.site.register(ApiPost)
@@ -9,3 +9,5 @@ admin.site.register(ApiGroupMembers)
 admin.site.register(ApiGroupPosts)
 admin.site.register(ApiComplain)
 admin.site.register(ApiMessage)
+admin.site.register(ApiLikes)
+admin.site.register(ApiComments)

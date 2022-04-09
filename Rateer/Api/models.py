@@ -48,6 +48,18 @@ class ApiPost(models.Model):
         return self.Caption
 
 
+class ApiLikes(models.Model):
+    LikedPostId = models.ForeignKey(ApiPost, on_delete=models.CASCADE)
+    LikerId = models.ForeignKey(user, on_delete=models.DO_NOTHING)
+
+
+class ApiComments(models.Model):
+    PostId = models.ForeignKey(ApiPost, on_delete=models.CASCADE)
+    CommentorId = models.ForeignKey(user, on_delete=models.DO_NOTHING)
+    Comment = models.CharField(max_length=1024, null= False)
+    Time = models.DateTimeField(null=False)
+
+
 class ApiGroupMembers(models.Model):
     GroupId = models.CharField(max_length=100,primary_key=True)
     UserId = models.CharField(max_length=100)

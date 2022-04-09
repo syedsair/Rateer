@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 import json
 from django.contrib.auth.models import User
-from .models import ApiPerson, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain,ApiMessage
+from .models import ApiPerson, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -705,5 +705,60 @@ def api_respondtocomplain(request):
         else:
             message='Invalid Complain ID'
         return HttpResponse(json.dumps({'message': message}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_savelike(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        user_email = request.GET['email']
+        post_id = request.GET['postid']
+
+        users = User.objects.filter(email=user_email)
+        if len(users) > 0:
+            user = users[0]
+            posts = ApiPost.objects.filter(PostId=post_id)
+            if len(posts) > 0:
+                post = posts[0]
+                likes = ApiLikes.objects.filter(LikedPostId=post, LikerId=user)
+                if len(likes) == 0:
+                    like = ApiLikes.objects.create(LikedPostId=post, LikerId=user)
+                    return HttpResponse(json.dumps({'message': 'Like Recorded!'}))
+                else:
+                    return HttpResponse(json.dumps({'message': 'This user has already liked this post!'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Invalid Post!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid User!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_savecomment(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        user_email = request.GET['email']
+        post_id = request.GET['postid']
+        comment = request.GET['comment']
+
+        users = User.objects.filter(email=user_email)
+        if len(users) > 0:
+            user = users[0]
+            posts = ApiPost.objects.filter(PostId=post_id)
+            if len(posts) > 0:
+                post = posts[0]
+                new_comment = ApiComments.objects.create(PostId=post, CommentorId=user, Comment=comment, Time=datetime.datetime.now())
+                return HttpResponse(json.dumps({'message': 'Comment Recorded!'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Invalid Post!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid User!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))

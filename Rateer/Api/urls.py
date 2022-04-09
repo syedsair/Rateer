@@ -4,7 +4,7 @@ from .views import (IndexView, api_authenticate, api_creategroup, api_joingroup,
                     api_getcomplains, api_deletecomplains, api_signup, api_deactivate_account,
                     api_unarchivegroup, api_archivegroup, api_blockuser, api_unblockuser,
                     api_forget_password, api_sendmessage, api_allchats,api_listusers,api_getspecifieduser,
-                    api_getallcomplains, api_respondtocomplain)
+                    api_getallcomplains, api_respondtocomplain, api_savelike, api_savecomment)
 app_name = "Api"
 urlpatterns = [
     path('', IndexView, name="IndexView"),
@@ -30,5 +30,7 @@ urlpatterns = [
     path('listusers', api_listusers, name="ListUsers"),
     path('getspecifieduser', api_getspecifieduser, name="SpecifiedUserView"),
     path('getallcomplains', api_getallcomplains, name="AllComplains"),
-    path('respondtocomplain', api_respondtocomplain, name="RespondToComplain")
+    path('respondtocomplain', api_respondtocomplain, name="RespondToComplain"),
+    path('savelike', api_savelike, name="SaveLike"),
+    path('savecomment', api_savecomment, name="SaveComment")
 ]
