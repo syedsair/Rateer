@@ -23,11 +23,13 @@ def api_signup(request):
     address = request.GET['address']
     phone = request.GET['phone']
     role = request.GET['role']
-    gender = request.GET['age']
+    gender = request.GET['gender']
+    rollno=email.split('@')[0]
     message = ""
     users = User.objects.filter(email=email)
     if len(users) == 0:
-        user = User.objects.create_user(name, email, password)
+
+        user = User.objects.create_user(rollno, email, password)
         person = ApiPerson.objects.create(ThisUser=user, Age=age, Status=status, Name=name ,Address=address,RawPassword=password, Phone=phone, Role=role, Gender=gender)
         message = "User Created!"
     else:
@@ -204,12 +206,12 @@ def api_listgroups(request):
     }
     lis = []
     for i in range(len(groups)):
-        if not groups[i].Archived:
-            current_group = {
-                'Group Name': groups[i].Name,
-                'Group Description': groups[i].Description
-            }
-            lis.append(current_group)
+        current_group = {
+            'Group Name': groups[i].Name,
+            'Group Description': groups[i].Description,
+            'Archived Status' : groups[i].Archived
+        }
+        lis.append(current_group)
     data['groups'] = lis
     return HttpResponse(json.dumps(data))
 
@@ -334,11 +336,12 @@ def api_deletepost(request):
 def api_savecomplain(request):
     message = ''
     try:
+        posting_time = datetime.datetime.now()
         userId = request.GET["username"]
         complain = request.GET["complain"]
         title = request.GET['title']
         status = "Submitted"
-        ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status).save()
+        ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status,Time=posting_time).save()
         message = 'Complain Recorded!'
     except Exception as e:
         message = 'Please Try Again Later!'
@@ -355,7 +358,8 @@ def api_getcomplains(request):
             'ComplainId': complainObj.ComplainId,
             'Title': complainObj.Title,
             'Complain': complainObj.Complain,
-            'Status': complainObj.ComplainStatus
+            'Status': complainObj.ComplainStatus,
+            'Time': str(complainObj.Time)
         }
         complains.append(d)
     final_complains = {
@@ -410,18 +414,110 @@ def api_allchats(request):
     sender_messages = ApiMessage.objects.filter(Sender=username)
     receiver_messages = ApiMessage.objects.filter(Receiver=username)
     final_response = []
+    sender_email=""
+    receiver_email=""
     for message in sender_messages:
+        sender_=User.objects.filter(username=message.Sender)
+        for s in sender_:
+            sender_email=s.email
+        receiver_ = User.objects.filter(username=message.Receiver)
+        for r in receiver_:
+            receiver_email = r.email
         final_response.append({
             'Sender': message.Sender,
+            'SenderEmail': sender_email,
             'Receiver': message.Receiver,
+            'ReceiverEmail': receiver_email,
             'Message': message.Message,
             'Time': str(message.Time)
         })
     for message in receiver_messages:
+        sender_ = User.objects.filter(username=message.Sender)
+        for s in sender_:
+            sender_email = s.email
+        receiver_ = User.objects.filter(username=message.Receiver)
+        for r in receiver_:
+            receiver_email = r.email
         final_response.append({
             'Sender': message.Sender,
+            'SenderEmail': sender_email,
             'Receiver': message.Receiver,
+            'ReceiverEmail': receiver_email,
             'Message': message.Message,
             'Time': str(message.Time)
         })
     return HttpResponse(json.dumps({'message': final_response}))
+def api_listusers(request):
+    lst=[]
+    users=User.objects.filter()
+    for u in users:
+        final_user = u
+        name_ = ApiPerson.objects.filter(ThisUser=final_user)
+        if(len(name_)!=0):
+            name = name_[0].Name
+            data = {
+                'name': name,
+                'email': u.email
+            }
+            lst.append(data)
+
+    return HttpResponse(json.dumps({"users" : lst}))
+
+
+def api_getspecifieduser(request):
+    data = {}
+    email = request.GET["email"]
+
+    all_users = User.objects.filter(email=email)
+    final_user = ""
+    final_person = ""
+    if len(all_users) != 0:
+        data['message'] = "User found!"
+        for final_user in all_users:
+            final_person = ApiPerson.objects.get(ThisUser=final_user)
+        if final_user.is_active:
+            data['email'] = final_person.ThisUser.email
+            data['name'] = final_person.Name
+            data['role'] = final_person.Role
+            data['age'] = final_person.Age
+            data['status'] = final_person.Status
+            data['address'] = final_person.Address
+            data['phone'] = final_person.Phone
+            data['gender'] = final_person.Gender
+        else:
+            message = "User Blocked by Admin!"
+    else:
+        data['message'] = "No User by this email"
+    return HttpResponse(json.dumps(data))
+
+def api_getallcomplains(request):
+
+    lst=[]
+    all_complains = ApiComplain.objects.all()
+    if len(all_complains)>0:
+        #data['message']="Complains Found!"
+        for c in all_complains:
+            data = {}
+            data['complainid'] = c.ComplainId
+            data['title'] = c.Title
+            data['complain'] = c.Complain
+            data['complainstatus'] = c.ComplainStatus
+            data['complainer'] = c.Complainer
+            data['Time']= str(c.Time)
+            lst.append(data)
+
+    return HttpResponse(json.dumps(lst))
+
+
+def api_respondtocomplain(request):
+    complainid=request.GET['complainid']
+    response=request.GET['response']
+    all_complains=ApiComplain.objects.filter(ComplainId=complainid)
+    message=''
+    if len(all_complains)>0:
+        all_complains[0].ComplainStatus=response
+        all_complains[0].save(update_fields=['ComplainStatus'])
+        message='Done'
+    else:
+        message='Invalid Complain ID'
+    return HttpResponse(json.dumps({'message': message}))

@@ -64,7 +64,7 @@ class ApiComplain(models.Model):
     Complain = models.CharField(max_length=2048)
     ComplainStatus = models.CharField(max_length=500, choices=ComplainStatusChoices)
     Complainer = models.CharField(max_length=200)
-
+    Time = models.DateTimeField()
     def __str__(self):
         return str(self.Complainer) + "-" + str(self.Complain) + "-" + str(self.ComplainStatus)
 
