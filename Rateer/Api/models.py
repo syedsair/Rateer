@@ -86,3 +86,12 @@ class ApiMessage(models.Model):
     Receiver = models.CharField(max_length=200)
     Message = models.CharField(max_length=5000, null=False)
     Time = models.DateTimeField(null=False)
+
+
+class ApiFriendRequests(models.Model):
+    Sender = models.ForeignKey(user, on_delete=models.CASCADE, related_name='%(class)s_friend_sender')
+    Receiver = models.ForeignKey(user, on_delete=models.DO_NOTHING, related_name='%(class)s_friend_receiver')
+
+class ApiFriendship(models.Model):
+    Friend_1 = models.ForeignKey(user, on_delete=models.CASCADE, related_name='%(class)s_friend_first')
+    Friend_2 = models.ForeignKey(user, on_delete=models.DO_NOTHING, related_name='%(class)s_friend_second')

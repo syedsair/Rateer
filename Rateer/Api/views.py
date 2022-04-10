@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 import json
 from django.contrib.auth.models import User
-from .models import ApiPerson, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments
+from .models import ApiPerson,ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -760,5 +760,92 @@ def api_savecomment(request):
                 return HttpResponse(json.dumps({'message': 'Invalid Post!'}))
         else:
             return HttpResponse(json.dumps({'message': 'Invalid User!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+def api_sendfriendrequest(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        s_email=request.GET['sender']
+        r_email=request.GET['receiver']
+        user1=User.objects.get(email=s_email)
+        user2=User.objects.get(email=r_email)
+        allrequests1 = ApiFriendRequests.objects.filter(Sender=user1,Receiver=user2)
+        allrequests2 = ApiFriendRequests.objects.filter(Sender=user2,Receiver=user1)
+        if len(allrequests1)==0 and len(allrequests2)==0:
+            req=ApiFriendRequests.objects.create(Sender=user1, Receiver=user2)
+            return HttpResponse(json.dumps({'message':'Request Sent'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Request Already Exists'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+def api_requestresponse(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        s_email = request.GET['sender']
+        r_email = request.GET['receiver']
+        response=request.GET['response']
+        user1 = User.objects.get(email=s_email)
+        user2 = User.objects.get(email=r_email)
+        allrequests = ApiFriendRequests.objects.filter(Sender=user1, Receiver=user2)
+        if len(allrequests) > 0:
+            if response=='Accept':
+                t1 = ApiFriendship.objects.create(Friend_1=user1, Friend_2=user2)
+                t1 = ApiFriendship.objects.create(Friend_1=user2, Friend_2=user1)
+                r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
+                r1.delete()
+                return HttpResponse(json.dumps({'message': 'Request accepted!'}))
+            elif response=='Reject':
+                r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
+                r1.delete()
+                return HttpResponse(json.dumps({'message': 'Request rejected!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Request does not exist!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+def api_deletefriendrequest(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        s_email=request.GET['sender']
+        r_email=request.GET['receiver']
+        user1=User.objects.get(email=s_email)
+        user2=User.objects.get(email=r_email)
+        allrequests= ApiFriendRequests.objects.filter(Sender=user1,Receiver=user2)
+        if len(allrequests)>0:
+            r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
+            r1.delete()
+            return HttpResponse(json.dumps({'message': 'Request deleted!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Request does not exist!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+def api_removefriend(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        friend1 = request.GET['friend1']
+        friend2 = request.GET['friend2']
+        user1 = User.objects.get(email=friend1)
+        user2 = User.objects.get(email=friend2)
+        r1 = ApiFriendship.objects.filter(Friend_1=user1, Friend_2=user2)
+        if len(r1)>0:
+            u1=ApiFriendship.objects.get(Friend_1=user1, Friend_2=user2)
+            u2=ApiFriendship.objects.get(Friend_1=user2, Friend_2=user1)
+            u1.delete()
+            u2.delete()
+            return HttpResponse(json.dumps({'message': 'Friend Removed!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Friend does not exist!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
