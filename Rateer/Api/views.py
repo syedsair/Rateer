@@ -637,7 +637,6 @@ def api_getspecifieduser(request):
     if key == API_KEY:
         data = {}
         email = request.GET["email"]
-
         all_users = User.objects.filter(email=email)
         final_user = ""
         final_person = ""
@@ -654,7 +653,7 @@ def api_getspecifieduser(request):
             data['address'] = final_person.Address
             data['phone'] = final_person.Phone
             data['gender'] = final_person.Gender
-            data['isunblocked']=final_person.is_active
+            data['isunblocked']=final_user.is_active
 
         else:
             data['message'] = "No User by this email"
