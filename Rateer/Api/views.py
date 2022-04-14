@@ -488,10 +488,10 @@ def api_getcomplains(request):
         complains = []
         for complainObj in complainObjects:
             d = {
-                'ComplainId': complainObj.ComplainId,
-                'Title': complainObj.Title,
-                'Complain': complainObj.Complain,
-                'Status': complainObj.ComplainStatus,
+                'complainid': complainObj.ComplainId,
+                'title': complainObj.Title,
+                'complain': complainObj.Complain,
+                'complainstatus': complainObj.ComplainStatus,
                 'Time': str(complainObj.Time)
             }
             complains.append(d)
@@ -645,17 +645,17 @@ def api_getspecifieduser(request):
             data['message'] = "User found!"
             for final_user in all_users:
                 final_person = ApiPerson.objects.get(ThisUser=final_user)
-            if final_user.is_active:
-                data['email'] = final_person.ThisUser.email
-                data['name'] = final_person.Name
-                data['role'] = final_person.Role
-                data['age'] = final_person.Age
-                data['status'] = final_person.Status
-                data['address'] = final_person.Address
-                data['phone'] = final_person.Phone
-                data['gender'] = final_person.Gender
-            else:
-                message = "User Blocked by Admin!"
+
+            data['email'] = final_person.ThisUser.email
+            data['name'] = final_person.Name
+            data['role'] = final_person.Role
+            data['age'] = final_person.Age
+            data['status'] = final_person.Status
+            data['address'] = final_person.Address
+            data['phone'] = final_person.Phone
+            data['gender'] = final_person.Gender
+            data['isunblocked']=final_person.is_active
+
         else:
             data['message'] = "No User by this email"
         return HttpResponse(json.dumps(data))
