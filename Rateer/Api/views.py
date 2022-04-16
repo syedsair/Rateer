@@ -2,7 +2,8 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 import json
 from django.contrib.auth.models import User
-from .models import ApiPerson,ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers,ApiPost,ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments
+from .models import (ApiPerson,ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers,ApiPost,
+                     ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments, ApiPrivacy)
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -11,6 +12,7 @@ from django.utils import timezone
 
 # API Key
 API_KEY = "5f8641f6-c4e8-490d-b619-2d8bf20d3786"
+
 
 # Create your views here.
 def IndexView(request):
@@ -39,6 +41,7 @@ def api_signup(request):
 
             user = User.objects.create_user(rollno, email, password)
             person = ApiPerson.objects.create(ThisUser=user, Age=age, Status=status, Name=name ,Address=address,RawPassword=password, Phone=phone, Role=role, Gender=gender)
+            privacy = ApiPrivacy.objects.create(ThisUser=user)
             message = "User Created!"
         else:
             message = "This User Already Exists!"
@@ -846,5 +849,76 @@ def api_removefriend(request):
             return HttpResponse(json.dumps({'message': 'Friend Removed!'}))
         else:
             return HttpResponse(json.dumps({'message': 'Friend does not exist!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_getprivacy(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        username = request.GET['username']
+        users = User.objects.filter(username=username)
+        if len(users) > 0:
+            thisuser = users[0]
+            privacies = ApiPrivacy.objects.filter(ThisUser=thisuser)
+            if len(privacies) > 0:
+                privacy = privacies[0]
+                dict = {
+                    'username': username,
+                    'ShowAge': privacy.ShowAge,
+                    'ShowEmail': privacy.ShowEmail,
+                    'ShowGender': privacy.ShowGender,
+                    'ShowAddress': privacy.ShowAddress,
+                    'ShowPhone': privacy.ShowPhone,
+                    'ShowPosts': privacy.ShowPosts
+                }
+                return HttpResponse(json.dumps(dict))
+            else:
+                return HttpResponse(json.dumps({'message': 'Privacy Object not found! Error!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'No Such User Exists!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_setprivacy(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        username = request.GET['username']
+        users = User.objects.filter(username=username)
+        if len(users) > 0:
+            thisuser = users[0]
+            privacies = ApiPrivacy.objects.filter(ThisUser=thisuser)
+            if len(privacies) > 0:
+                privacy = privacies[0]
+                try:
+                    showage = request.GET['showage']
+                    showemail = request.GET['showemail']
+                    showphone = request.GET['showphone']
+                    showaddress = request.GET['showaddress']
+                    showgender = request.GET['showgender']
+                    showposts = request.GET['showposts']
+
+                    privacy.ShowAge = showage
+                    privacy.ShowAddress = showaddress
+                    privacy.ShowPosts = showposts
+                    privacy.ShowPhone = showphone
+                    privacy.ShowEmail = showemail
+                    privacy.ShowGender = showgender
+
+                    privacy.save(update_fields=['ShowAge', 'ShowAddress', 'ShowPosts', 'ShowPhone', 'ShowEmail', 'ShowGender'])
+                    return HttpResponse(json.dumps({'message': 'Privacy Updated!'}))
+                except Exception as e:
+                    return HttpResponse(json.dumps({'message': 'Enter All Privacy Fields!'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Privacy Object not found! Error!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'No Such User Exists!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
