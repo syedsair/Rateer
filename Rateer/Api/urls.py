@@ -6,7 +6,7 @@ from .views import (IndexView, api_authenticate, api_creategroup, api_joingroup,
                     api_forget_password, api_sendmessage, api_allchats,api_listusers,api_getspecifieduser,
                     api_getallcomplains, api_respondtocomplain, api_savelike, api_savecomment, api_sendfriendrequest,
                     api_requestresponse, api_deletefriendrequest,api_removefriend,api_leavegroup, api_getprivacy,
-                    api_deletepost, api_deletegroup, api_setprivacy)
+                    api_deletepost, api_deletegroup, api_setprivacy, api_chatupdate)
 app_name = "Api"
 urlpatterns = [
     path('', IndexView, name="IndexView"),
@@ -43,6 +43,7 @@ urlpatterns = [
     path('deletepost', api_deletepost, name='DeletePost'),
     path('deletegroup', api_deletegroup, name="DeleteGroup"),
     path('getprivacy', api_getprivacy, name="GetPrivacy"),
-    path('setprivacy', api_setprivacy, name="SetPrivacy")
+    path('setprivacy', api_setprivacy, name="SetPrivacy"),
+    path('chatupdate', api_chatupdate, name="ChatUpdate")
 
 ]

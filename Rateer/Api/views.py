@@ -2,13 +2,12 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 import json
 from django.contrib.auth.models import User
-from .models import (ApiPerson,ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers,ApiPost,
-                     ApiGroupPosts,ApiComplain,ApiMessage,ApiLikes,ApiComments, ApiPrivacy)
+from .models import (ApiPerson, ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers, ApiPost,
+                     ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy)
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
-
 
 # API Key
 API_KEY = "5f8641f6-c4e8-490d-b619-2d8bf20d3786"
@@ -34,13 +33,14 @@ def api_signup(request):
         phone = request.GET['phone']
         role = request.GET['role']
         gender = request.GET['gender']
-        rollno=email.split('@')[0]
+        rollno = email.split('@')[0]
         message = ""
         users = User.objects.filter(email=email)
         if len(users) == 0:
 
             user = User.objects.create_user(rollno, email, password)
-            person = ApiPerson.objects.create(ThisUser=user, Age=age, Status=status, Name=name ,Address=address,RawPassword=password, Phone=phone, Role=role, Gender=gender)
+            person = ApiPerson.objects.create(ThisUser=user, Age=age, Status=status, Name=name, Address=address,
+                                              RawPassword=password, Phone=phone, Role=role, Gender=gender)
             privacy = ApiPrivacy.objects.create(ThisUser=user)
             message = "User Created!"
         else:
@@ -113,7 +113,8 @@ def api_forget_password(request):
             if user.is_active:
                 person = ApiPerson.objects.get(ThisUser=user)
 
-                email_plaintext_message = "A password reset query has been submitted to FastNet. Password for your account is " + str(person.RawPassword) + "."
+                email_plaintext_message = "A password reset query has been submitted to FastNet. Password for your account is " + str(
+                    person.RawPassword) + "."
                 from_email = settings.EMAIL_HOST_USER
                 msg = EmailMultiAlternatives(
                     "Password Reset For FastNet",
@@ -191,7 +192,7 @@ def api_archivegroup(request):
             message = "Group Archived!"
         else:
             message = "No Such Group Exists!"
-        return  HttpResponse(json.dumps({'messagee': message}))
+        return HttpResponse(json.dumps({'messagee': message}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
 
@@ -210,7 +211,7 @@ def api_unarchivegroup(request):
             message = "Group Unarchived!"
         else:
             message = "No Such Group Exists!"
-        return  HttpResponse(json.dumps({'messagee': message}))
+        return HttpResponse(json.dumps({'messagee': message}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
 
@@ -275,7 +276,7 @@ def api_listgroups(request):
             current_group = {
                 'Group Name': groups[i].Name,
                 'Group Description': groups[i].Description,
-                'Archived Status' : groups[i].Archived
+                'Archived Status': groups[i].Archived
             }
             lis.append(current_group)
         data['groups'] = lis
@@ -359,9 +360,9 @@ def api_createpost(request):
         image = request.GET['caption']
         group_id = request.GET['group_id']
 
-        ApiPost.objects.create(Poster=poster, Caption=caption,Image=image,PostingTime=posting_time).save()
-        post = ApiPost.objects.get(Poster=poster, Caption=caption,Image=image,PostingTime=posting_time)
-        ApiGroupPosts.objects.create(GroupId=group_id,PostId=post.PostId)
+        ApiPost.objects.create(Poster=poster, Caption=caption, Image=image, PostingTime=posting_time).save()
+        post = ApiPost.objects.get(Poster=poster, Caption=caption, Image=image, PostingTime=posting_time)
+        ApiGroupPosts.objects.create(GroupId=group_id, PostId=post.PostId)
         return HttpResponse(json.dumps({'message': 'Post Created!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
@@ -470,7 +471,8 @@ def api_savecomplain(request):
             complain = request.GET["complain"]
             title = request.GET['title']
             status = "Submitted"
-            ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status,Time=posting_time).save()
+            ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status,
+                                       Time=posting_time).save()
             message = 'Complain Recorded!'
         except Exception as e:
             message = 'Please Try Again Later!'
@@ -523,7 +525,7 @@ def api_deletecomplains(request):
                 message = 'No Such Complain Exists!'
         except Exception as e:
             message = "Please Try Again Later!"
-        return HttpResponse(json.dumps({"message" : message}))
+        return HttpResponse(json.dumps({"message": message}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
 
@@ -549,7 +551,8 @@ def api_sendmessage(request):
         if final_receiver_user != "" and final_sender_user != "":
             return_message = ""
             try:
-                ApiMessage.objects.create(Sender=final_sender_user.username, Receiver=final_receiver_user.username, Message=message, Time=timezone.now()).save()
+                ApiMessage.objects.create(Sender=final_sender_user.username, Receiver=final_receiver_user.username,
+                                          Message=message, Time=timezone.now()).save()
                 return_message = "Message Sent!"
             except Exception as e:
                 return_message = "Please Try Again Later!"
@@ -571,12 +574,18 @@ def api_allchats(request):
         sender_messages = ApiMessage.objects.filter(Sender=username)
         receiver_messages = ApiMessage.objects.filter(Receiver=username)
         final_response = []
-        sender_email=""
-        receiver_email=""
+        sender_email = ""
+        receiver_email = ""
+        messages = []
         for message in sender_messages:
-            sender_=User.objects.filter(username=message.Sender)
+            messages.append(message)
+        for message in receiver_messages:
+            messages.append(message)
+        messages = sorted(messages, key=lambda x: x.Time.time(), reverse=False)
+        for message in messages:
+            sender_ = User.objects.filter(username=message.Sender)
             for s in sender_:
-                sender_email=s.email
+                sender_email = s.email
             receiver_ = User.objects.filter(username=message.Receiver)
             for r in receiver_:
                 receiver_email = r.email
@@ -588,7 +597,31 @@ def api_allchats(request):
                 'Message': message.Message,
                 'Time': str(message.Time)
             })
+        return HttpResponse(json.dumps({'message': final_response}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_chatupdate(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        username = request.GET['username']
+        friend = request.GET['friend']
+        sender_messages = ApiMessage.objects.filter(Sender=username, Receiver=friend)
+        receiver_messages = ApiMessage.objects.filter(Receiver=username, Sender=friend)
+        final_response = []
+        sender_email = ""
+        receiver_email = ""
+        messages = []
+        for message in sender_messages:
+            messages.append(message)
         for message in receiver_messages:
+            messages.append(message)
+        messages = sorted(messages, key=lambda x: x.Time.time(), reverse=False)
+        for message in messages:
             sender_ = User.objects.filter(username=message.Sender)
             for s in sender_:
                 sender_email = s.email
@@ -614,12 +647,12 @@ def api_listusers(request):
     except Exception as e:
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
-        lst=[]
-        users=User.objects.filter()
+        lst = []
+        users = User.objects.filter()
         for u in users:
             final_user = u
             name_ = ApiPerson.objects.filter(ThisUser=final_user)
-            if(len(name_)!=0):
+            if (len(name_) != 0):
                 name = name_[0].Name
                 data = {
                     'name': name,
@@ -627,7 +660,7 @@ def api_listusers(request):
                 }
                 lst.append(data)
 
-        return HttpResponse(json.dumps({"users" : lst}))
+        return HttpResponse(json.dumps({"users": lst}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
 
@@ -656,7 +689,7 @@ def api_getspecifieduser(request):
             data['address'] = final_person.Address
             data['phone'] = final_person.Phone
             data['gender'] = final_person.Gender
-            data['isunblocked']=final_user.is_active
+            data['isunblocked'] = final_user.is_active
 
         else:
             data['message'] = "No User by this email"
@@ -671,10 +704,10 @@ def api_getallcomplains(request):
     except Exception as e:
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
-        lst=[]
+        lst = []
         all_complains = ApiComplain.objects.all()
-        if len(all_complains)>0:
-            #data['message']="Complains Found!"
+        if len(all_complains) > 0:
+            # data['message']="Complains Found!"
             for c in all_complains:
                 data = {}
                 data['complainid'] = c.ComplainId
@@ -682,7 +715,7 @@ def api_getallcomplains(request):
                 data['complain'] = c.Complain
                 data['complainstatus'] = c.ComplainStatus
                 data['complainer'] = c.Complainer
-                data['Time']= str(c.Time)
+                data['Time'] = str(c.Time)
                 lst.append(data)
 
         return HttpResponse(json.dumps(lst))
@@ -696,16 +729,16 @@ def api_respondtocomplain(request):
     except Exception as e:
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
-        complainid=request.GET['complainid']
-        response=request.GET['response']
-        all_complains=ApiComplain.objects.filter(ComplainId=complainid)
-        message=''
-        if len(all_complains)>0:
-            all_complains[0].ComplainStatus=response
+        complainid = request.GET['complainid']
+        response = request.GET['response']
+        all_complains = ApiComplain.objects.filter(ComplainId=complainid)
+        message = ''
+        if len(all_complains) > 0:
+            all_complains[0].ComplainStatus = response
             all_complains[0].save(update_fields=['ComplainStatus'])
-            message='Done'
+            message = 'Done'
         else:
-            message='Invalid Complain ID'
+            message = 'Invalid Complain ID'
         return HttpResponse(json.dumps({'message': message}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
@@ -756,7 +789,8 @@ def api_savecomment(request):
             posts = ApiPost.objects.filter(PostId=post_id)
             if len(posts) > 0:
                 post = posts[0]
-                new_comment = ApiComments.objects.create(PostId=post, CommentorId=user, Comment=comment, Time=datetime.datetime.now())
+                new_comment = ApiComments.objects.create(PostId=post, CommentorId=user, Comment=comment,
+                                                         Time=datetime.datetime.now())
                 return HttpResponse(json.dumps({'message': 'Comment Recorded!'}))
             else:
                 return HttpResponse(json.dumps({'message': 'Invalid Post!'}))
@@ -764,25 +798,29 @@ def api_savecomment(request):
             return HttpResponse(json.dumps({'message': 'Invalid User!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
 def api_sendfriendrequest(request):
     try:
         key = request.GET['api-key']
     except Exception as e:
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
-        s_email=request.GET['sender']
-        r_email=request.GET['receiver']
-        user1=User.objects.get(email=s_email)
-        user2=User.objects.get(email=r_email)
-        allrequests1 = ApiFriendRequests.objects.filter(Sender=user1,Receiver=user2)
-        allrequests2 = ApiFriendRequests.objects.filter(Sender=user2,Receiver=user1)
-        if len(allrequests1)==0 and len(allrequests2)==0:
-            req=ApiFriendRequests.objects.create(Sender=user1, Receiver=user2)
-            return HttpResponse(json.dumps({'message':'Request Sent'}))
+        s_email = request.GET['sender']
+        r_email = request.GET['receiver']
+        user1 = User.objects.get(email=s_email)
+        user2 = User.objects.get(email=r_email)
+        allrequests1 = ApiFriendRequests.objects.filter(Sender=user1, Receiver=user2)
+        allrequests2 = ApiFriendRequests.objects.filter(Sender=user2, Receiver=user1)
+        if len(allrequests1) == 0 and len(allrequests2) == 0:
+            req = ApiFriendRequests.objects.create(Sender=user1, Receiver=user2)
+            return HttpResponse(json.dumps({'message': 'Request Sent'}))
         else:
             return HttpResponse(json.dumps({'message': 'Request Already Exists'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
 def api_requestresponse(request):
     try:
         key = request.GET['api-key']
@@ -791,18 +829,18 @@ def api_requestresponse(request):
     if key == API_KEY:
         s_email = request.GET['sender']
         r_email = request.GET['receiver']
-        response=request.GET['response']
+        response = request.GET['response']
         user1 = User.objects.get(email=s_email)
         user2 = User.objects.get(email=r_email)
         allrequests = ApiFriendRequests.objects.filter(Sender=user1, Receiver=user2)
         if len(allrequests) > 0:
-            if response=='Accept':
+            if response == 'Accept':
                 t1 = ApiFriendship.objects.create(Friend_1=user1, Friend_2=user2)
                 t1 = ApiFriendship.objects.create(Friend_1=user2, Friend_2=user1)
                 r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
                 r1.delete()
                 return HttpResponse(json.dumps({'message': 'Request accepted!'}))
-            elif response=='Reject':
+            elif response == 'Reject':
                 r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
                 r1.delete()
                 return HttpResponse(json.dumps({'message': 'Request rejected!'}))
@@ -811,18 +849,19 @@ def api_requestresponse(request):
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
 
+
 def api_deletefriendrequest(request):
     try:
         key = request.GET['api-key']
     except Exception as e:
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
-        s_email=request.GET['sender']
-        r_email=request.GET['receiver']
-        user1=User.objects.get(email=s_email)
-        user2=User.objects.get(email=r_email)
-        allrequests= ApiFriendRequests.objects.filter(Sender=user1,Receiver=user2)
-        if len(allrequests)>0:
+        s_email = request.GET['sender']
+        r_email = request.GET['receiver']
+        user1 = User.objects.get(email=s_email)
+        user2 = User.objects.get(email=r_email)
+        allrequests = ApiFriendRequests.objects.filter(Sender=user1, Receiver=user2)
+        if len(allrequests) > 0:
             r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
             r1.delete()
             return HttpResponse(json.dumps({'message': 'Request deleted!'}))
@@ -830,6 +869,8 @@ def api_deletefriendrequest(request):
             return HttpResponse(json.dumps({'message': 'Request does not exist!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
 def api_removefriend(request):
     try:
         key = request.GET['api-key']
@@ -841,9 +882,9 @@ def api_removefriend(request):
         user1 = User.objects.get(email=friend1)
         user2 = User.objects.get(email=friend2)
         r1 = ApiFriendship.objects.filter(Friend_1=user1, Friend_2=user2)
-        if len(r1)>0:
-            u1=ApiFriendship.objects.get(Friend_1=user1, Friend_2=user2)
-            u2=ApiFriendship.objects.get(Friend_1=user2, Friend_2=user1)
+        if len(r1) > 0:
+            u1 = ApiFriendship.objects.get(Friend_1=user1, Friend_2=user2)
+            u2 = ApiFriendship.objects.get(Friend_1=user2, Friend_2=user1)
             u1.delete()
             u2.delete()
             return HttpResponse(json.dumps({'message': 'Friend Removed!'}))
@@ -912,7 +953,8 @@ def api_setprivacy(request):
                     privacy.ShowEmail = showemail
                     privacy.ShowGender = showgender
 
-                    privacy.save(update_fields=['ShowAge', 'ShowAddress', 'ShowPosts', 'ShowPhone', 'ShowEmail', 'ShowGender'])
+                    privacy.save(
+                        update_fields=['ShowAge', 'ShowAddress', 'ShowPosts', 'ShowPhone', 'ShowEmail', 'ShowGender'])
                     return HttpResponse(json.dumps({'message': 'Privacy Updated!'}))
                 except Exception as e:
                     return HttpResponse(json.dumps({'message': 'Enter All Privacy Fields!'}))
