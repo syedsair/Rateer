@@ -106,3 +106,11 @@ class ApiPrivacy(models.Model):
     ShowAddress = models.BooleanField(default=True)
     ShowPhone = models.BooleanField(default=True)
     ShowPosts = models.BooleanField(default=True)
+class ApiTimetable(models.Model):
+    Dept = models.CharField(max_length=30)
+    CourseCode = models.CharField(max_length=10)
+    CourseName = models.CharField(max_length=50)
+    Day = models.CharField(max_length=8)
+    Venue = models.CharField(max_length=15)
+    StartsAt = models.CharField(max_length=5)
+    EndsAt = models.CharField(max_length=5)

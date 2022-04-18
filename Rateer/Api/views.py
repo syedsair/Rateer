@@ -1,9 +1,10 @@
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.auth.models import User
 from .models import (ApiPerson, ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers, ApiPost,
-                     ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy)
+                     ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy, ApiTimetable)
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -964,3 +965,57 @@ def api_setprivacy(request):
             return HttpResponse(json.dumps({'message': 'No Such User Exists!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+@csrf_exempt
+def api_updatetimetable(request):
+    try:
+        key = request.POST.get('api-key')
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        oldtimetables = ApiTimetable.objects.all()
+        for x in oldtimetables:
+            x.delete()
+        if request.method == 'POST':
+            file = request.FILES['timetable']
+            file_data = file.read().decode("utf-8")
+            csv_data = file_data.split('\n')
+            for x in csv_data:
+                fields = x.split(',')
+                if len(fields)==7:
+                    FinalTimetable=ApiTimetable.objects.create(Dept=fields[0], CourseCode=fields[1], CourseName=fields[2],
+                                                                Day=fields[3], Venue=fields[4], StartsAt=fields[5],
+                                                                EndsAt=fields[6].replace('\r',''))
+
+
+            return HttpResponse(json.dumps({'message':'Timetable Updated'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'File Not Found!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+def api_gettimetable(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        dept = request.GET['dept']
+        lst = []
+        final_timetable = ApiTimetable.objects.filter(Dept=dept)
+        for x in final_timetable:
+
+            data = {
+                'dept': x.Dept,
+                'course_code': x.CourseCode,
+                'course_name': x.CourseName,
+                'day': x.Day,
+                'venue': x.Venue,
+                'starts_at': x.StartsAt,
+                'ends_at': x.EndsAt
+            }
+            lst.append(data)
+
+        return HttpResponse(json.dumps(lst))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
