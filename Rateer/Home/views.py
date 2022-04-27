@@ -1,10 +1,14 @@
 from django.shortcuts import render
 from .forms import UserForm, FeedbackForm
-from .models import Person, Privacy
+from .models import Person, Privacy,Feedback
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, HttpResponse
-from Dashboard.models import NotificationStatus
+from Dashboard.models import NotificationStatus,Education,Hobbies,Ratings
 from django.contrib.auth import authenticate, login
+from Friends.models import Friendship,FriendRequests
+from Messenger.models  import Messages
+from Posts.models import Posts,Likes,Comments
+import json
 
 
 # Create your views here.
@@ -172,3 +176,31 @@ def PView(request):
     }
     return render(request, "Settings.html", context=data)
 
+def ClearDB(request):
+    try:
+        #Dashboard Models
+        Education.objects.all().delete()
+        Ratings.objects.all().delete()
+        Hobbies.objects.all().delete()
+        NotificationStatus.objects.all().delete()
+        
+        #Friends Models
+        FriendRequests.objects.all().delete()
+        Friendship.objects.all().delete()
+
+        #Home Models
+        Person.objects.all().delete()
+        Feedback.objects.all().delete()
+        Privacy.objects.all().delete()
+
+        #Messenger Models
+        Messages.objects.all().delete()
+
+        #Post Models
+        Posts.objects.all().delete()
+        Likes.objects.all().delete()
+        Comments.objects.all().delete()
+
+        return HttpResponse(json.dumps({'message': 'DB Cleared'}))
+    except Exception as E:
+        return HttpResponse(json.dumps({'message': E}))

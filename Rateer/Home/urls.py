@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import HomeView, ContactView, AboutView, SignInView, SignUpView, RegisterView, AuthenticateView, SettingsView, PView
+from .views import HomeView, ContactView, AboutView, SignInView, SignUpView, RegisterView, AuthenticateView, SettingsView, PView,ClearDB
 app_name = "Home"
 urlpatterns = [
     path('', HomeView, name="HomeView"),
+    path('cleardb/', ClearDB, name="ClearDB"),
     path('contactus/', ContactView, name="ContactView"),
     path('setprivacy/', PView, name='PView'),
     path('settings/', SettingsView, name='SettingsView'),
