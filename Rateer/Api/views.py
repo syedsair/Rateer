@@ -388,6 +388,24 @@ def api_groupposts(request):
             d['Image'] = str(obj.Image)
             d['PostingTime'] = str(obj.PostingTime)
             d['Poster'] = obj.Poster
+
+            comments = ApiComments.objects.filter(PostId=obj.PostId)
+            final_comments = []
+            for comment in comments:
+                comment_obj = {}
+                comment_obj['Commenter'] = comment.CommentorId.username
+                comment_obj['Comment'] = comment.Comment
+                comment_obj['Time'] = comment.Time
+                final_comments.append(comment_obj)
+            d['comments'] = final_comments
+
+            likes = ApiLikes.objects.filter(LikedPostId=obj.PostId)
+            final_likes = []
+            for like in likes:
+                like_obj = {}
+                like_obj['Liker'] = like.LikerId.username
+                final_likes.append(like_obj)
+            d['likes'] = final_likes
             lis.append(d)
         data = {
             'posts': lis

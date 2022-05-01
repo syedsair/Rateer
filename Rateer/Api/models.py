@@ -106,6 +106,8 @@ class ApiPrivacy(models.Model):
     ShowAddress = models.BooleanField(default=True)
     ShowPhone = models.BooleanField(default=True)
     ShowPosts = models.BooleanField(default=True)
+
+
 class ApiTimetable(models.Model):
     Dept = models.CharField(max_length=30)
     CourseCode = models.CharField(max_length=10)
