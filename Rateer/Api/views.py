@@ -1065,3 +1065,26 @@ def api_saveunlike(request):
             return HttpResponse(json.dumps({'message': 'Invalid User!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_getrequests(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        user_email = request.GET['email']
+        users = User.objects.filter(email=user_email)
+        if len(users) > 0:
+            user = users[0]
+            requests = ApiFriendRequests.objects.filter(Receiver=user)
+            final_requests = []
+            for req in requests:
+                obj = {}
+                obj['Sender'] = req.Sender.username
+                final_requests.append(obj)
+            return HttpResponse(json.dumps(final_requests))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid User!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
