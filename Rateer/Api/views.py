@@ -691,6 +691,11 @@ def api_getspecifieduser(request):
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
         data = {}
+        loggedinuser = request.GET['loggedinuseremail']
+        try:
+            logged_user = User.objects.get(email=loggedinuser)
+        except Exception as e:
+            return HttpResponse(json.dumps({'message': 'Invalid Logged In User Email!'}))
         email = request.GET["email"]
         all_users = User.objects.filter(email=email)
         final_user = ""
@@ -700,6 +705,21 @@ def api_getspecifieduser(request):
             for final_user in all_users:
                 final_person = ApiPerson.objects.get(ThisUser=final_user)
 
+            relation = ""
+            friendship1 = ApiFriendship.objects.filter(Friend_1=logged_user, Friend_2=final_user)
+            friendship2 = ApiFriendship.objects.filter(Friend_1=final_user, Friend_2=logged_user)
+            if len(friendship1) > 0 or len(friendship2) > 0:
+                relation = 'Friends'
+            else:
+                requests = ApiFriendRequests.objects.filter(Sender=logged_user, Receiver=final_user)
+                if len(requests) > 0:
+                    relation = 'Request Sent'
+                else:
+                    requests = ApiFriendRequests.objects.filter(Sender=final_user, Receiver=logged_user)
+                    if len(requests) > 0:
+                        relation = 'Request Received'
+                    else:
+                        relation = 'No Relation'
             data['email'] = final_person.ThisUser.email
             data['name'] = final_person.Name
             data['role'] = final_person.Role
@@ -709,6 +729,7 @@ def api_getspecifieduser(request):
             data['phone'] = final_person.Phone
             data['gender'] = final_person.Gender
             data['isunblocked'] = final_user.is_active
+            data['relation'] = relation
 
         else:
             data['message'] = "No User by this email"
