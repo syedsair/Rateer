@@ -1037,3 +1037,31 @@ def api_gettimetable(request):
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
 
+
+def api_saveunlike(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        user_email = request.GET['email']
+        post_id = request.GET['postid']
+        users = User.objects.filter(email=user_email)
+        if len(users) > 0:
+            user = users[0]
+            posts = ApiPost.objects.filter(PostId=post_id)
+            if len(posts) > 0:
+                post = posts[0]
+                likes = ApiLikes.objects.filter(LikedPostId=post, LikerId=user)
+                if len(likes) == 0:
+                    return HttpResponse(json.dumps({'message': 'This user has not liked this post yet!'}))
+                else:
+                    like = likes[0]
+                    like.delete()
+                    return HttpResponse(json.dumps({'message': 'Unlike recorded!'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Invalid Post!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid User!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
