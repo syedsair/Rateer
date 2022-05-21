@@ -395,7 +395,7 @@ def api_groupposts(request):
                 comment_obj = {}
                 comment_obj['Commenter'] = comment.CommentorId.username
                 comment_obj['Comment'] = comment.Comment
-                comment_obj['Time'] = comment.Time
+                comment_obj['Time'] = str(comment.Time)
                 final_comments.append(comment_obj)
             d['comments'] = final_comments
 
