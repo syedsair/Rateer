@@ -1195,3 +1195,45 @@ def api_specificuserposts(request):
             return HttpResponse(json.dumps({'message': 'Invalid User Email!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_getspecificpost(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        postid = request.GET['postid']
+        posts = ApiPost.objects.filter(PostId=postid)
+        if len(posts) > 0:
+            d = {}
+            obj = posts[0]
+
+            d['PostId'] = obj.PostId
+            d['Caption'] = obj.Caption
+            d['Image'] = str(obj.Image)
+            d['PostingTime'] = str(obj.PostingTime)
+            d['Poster'] = obj.Poster
+
+            comments = ApiComments.objects.filter(PostId=obj.PostId)
+            final_comments = []
+            for comment in comments:
+                comment_obj = {}
+                comment_obj['Commenter'] = comment.CommentorId.username
+                comment_obj['Comment'] = comment.Comment
+                comment_obj['Time'] = str(comment.Time)
+                final_comments.append(comment_obj)
+            d['comments'] = final_comments
+
+            likes = ApiLikes.objects.filter(LikedPostId=obj.PostId)
+            final_likes = []
+            for like in likes:
+                like_obj = {}
+                like_obj['Liker'] = like.LikerId.username
+                final_likes.append(like_obj)
+            d['likes'] = final_likes
+            return HttpResponse(json.dumps(d))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid Post Id!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
