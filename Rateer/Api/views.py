@@ -1109,3 +1109,40 @@ def api_getrequests(request):
             return HttpResponse(json.dumps({'message': 'Invalid User!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_updatepersonalinformation(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        user_email = request.GET['email']
+        new_name = request.GET['name']
+        new_pass = request.GET['pass']
+        new_age = request.GET['age']
+        new_gender = request.GET['gender']
+        new_phone = request.GET['phone']
+        new_addr = request.GET['address']
+
+        users = User.objects.filter(email=user_email)
+        if len(users) > 0:
+            user = users[0]
+            person = ApiPerson.objects.filter(ThisUser=user)[0]
+
+            person.Age = new_age
+            person.Name = new_name
+            person.Gender = new_gender
+            person.Phone = new_phone
+            person.Address = new_addr
+            person.RawPassword = new_pass
+
+            person.save(update_fields=['Age', 'Name', 'Gender', 'Phone', 'Address', 'RawPassword'])
+
+            user.set_password(new_pass)
+            user.save()
+            return HttpResponse(json.dumps({'message': 'Information Updated!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid User Email!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))

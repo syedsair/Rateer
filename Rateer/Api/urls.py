@@ -7,7 +7,7 @@ from .views import (IndexView, api_authenticate, api_creategroup, api_joingroup,
                     api_getallcomplains, api_respondtocomplain, api_savelike, api_savecomment, api_sendfriendrequest,
                     api_requestresponse, api_deletefriendrequest,api_removefriend,api_leavegroup, api_getprivacy,
                     api_deletepost, api_deletegroup, api_setprivacy, api_chatupdate, api_updatetimetable,
-                    api_gettimetable, api_saveunlike, api_getrequests)
+                    api_gettimetable, api_saveunlike, api_getrequests, api_updatepersonalinformation)
 app_name = "Api"
 urlpatterns = [
     path('', IndexView, name="IndexView"),
@@ -49,5 +49,6 @@ urlpatterns = [
     path('updatetimetable', api_updatetimetable, name="UpdateTimetable"),
     path('gettimetable', api_gettimetable, name="GetTimetable"),
     path('saveunlike', api_saveunlike, name='SaveUnLike'),
-    path('getrequests', api_getrequests, name='GetRequests')
+    path('getrequests', api_getrequests, name='GetRequests'),
+    path('updatepersonalinfo', api_updatepersonalinformation, name='UpdatePersonalInfo')
 ]
