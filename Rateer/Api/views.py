@@ -1146,3 +1146,52 @@ def api_updatepersonalinformation(request):
             return HttpResponse(json.dumps({'message': 'Invalid User Email!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_specificuserposts(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        email = request.GET['email']
+        users = User.objects.filter(email=email)
+        if len(users) > 0:
+            user = users[0]
+            posts = ApiPost.objects.filter(Poster=user.username)
+            lis = []
+            for i in range(len(posts)):
+                d = {}
+                obj = ApiPost.objects.get(PostId=posts[i].PostId)
+                d['PostId'] = obj.PostId
+                d['Caption'] = obj.Caption
+                d['Image'] = str(obj.Image)
+                d['PostingTime'] = str(obj.PostingTime)
+                d['Poster'] = obj.Poster
+
+                comments = ApiComments.objects.filter(PostId=obj.PostId)
+                final_comments = []
+                for comment in comments:
+                    comment_obj = {}
+                    comment_obj['Commenter'] = comment.CommentorId.username
+                    comment_obj['Comment'] = comment.Comment
+                    comment_obj['Time'] = str(comment.Time)
+                    final_comments.append(comment_obj)
+                d['comments'] = final_comments
+
+                likes = ApiLikes.objects.filter(LikedPostId=obj.PostId)
+                final_likes = []
+                for like in likes:
+                    like_obj = {}
+                    like_obj['Liker'] = like.LikerId.username
+                    final_likes.append(like_obj)
+                d['likes'] = final_likes
+                lis.append(d)
+            data = {
+                'posts': lis
+            }
+            return HttpResponse(json.dumps(data))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid User Email!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
