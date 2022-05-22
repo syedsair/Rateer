@@ -1,10 +1,11 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.auth.models import User
 from .models import (ApiPerson, ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers, ApiPost,
-                     ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy, ApiTimetable)
+                     ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy, ApiTimetable,
+                     ApiNotifications)
 import datetime
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
@@ -364,6 +365,18 @@ def api_createpost(request):
         ApiPost.objects.create(Poster=poster, Caption=caption, Image=image, PostingTime=posting_time).save()
         post = ApiPost.objects.get(Poster=poster, Caption=caption, Image=image, PostingTime=posting_time)
         ApiGroupPosts.objects.create(GroupId=group_id, PostId=post.PostId)
+
+        # Notification being sent that this person has posted in this group to all group members
+        time = datetime.datetime.now()
+        sender = poster
+        content = " posted in group: " + group_id + "."
+
+        group_members = ApiGroupMembers.objects.filter(GroupId=group_id)
+        for i in range(len(group_members)):
+            receiver = group_members[i].UserId
+            notification = ApiNotifications.objects.create(Receiver=receiver, Sender=sender, Content=content, Time=time)
+            notification.save()
+
         return HttpResponse(json.dumps({'message': 'Post Created!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
@@ -422,6 +435,17 @@ def api_deletegroup(request):
         return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
     if key == API_KEY:
         group_id = request.GET['group_id']
+
+        time = datetime.datetime.now()
+        sender = "FastNet"
+        content = " deleted the group: " + group_id + "."
+
+        group_members = ApiGroupMembers.objects.filter(GroupId=group_id)
+        for i in range(len(group_members)):
+            receiver = group_members[i].UserId
+            notification = ApiNotifications.objects.create(Receiver=receiver, Sender=sender, Content=content, Time=time)
+            notification.save()
+
         posts = ApiGroupPosts.objects.filter(GroupId=group_id)
 
         for i in range(len(posts)):
@@ -493,6 +517,15 @@ def api_savecomplain(request):
             ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status,
                                        Time=posting_time).save()
             message = 'Complain Recorded!'
+
+            time = datetime.datetime.now()
+            sender = "FastNet"
+            content = " received your complain."
+
+            notification = ApiNotifications.objects.create(Receiver=userId, Sender=sender, Content=content,
+                                                           Time=time)
+            notification.save()
+
         except Exception as e:
             message = 'Please Try Again Later!'
         return HttpResponse(json.dumps({'message': message}))
@@ -776,6 +809,12 @@ def api_respondtocomplain(request):
         if len(all_complains) > 0:
             all_complains[0].ComplainStatus = response
             all_complains[0].save(update_fields=['ComplainStatus'])
+
+            notification = ApiNotifications.objects.create(Receiver=all_complains[0].Complainer, Sender="FastNet",
+                                                           Content=" has marked your complain as " + response + ".",
+                                                           Time=datetime.datetime.now())
+            notification.save()
+
             message = 'Done'
         else:
             message = 'Invalid Complain ID'
@@ -802,6 +841,11 @@ def api_savelike(request):
                 likes = ApiLikes.objects.filter(LikedPostId=post, LikerId=user)
                 if len(likes) == 0:
                     like = ApiLikes.objects.create(LikedPostId=post, LikerId=user)
+
+                    notification = ApiNotifications.objects.create(Receiver=post.Poster, Sender=user.username, Content=" liked your post.",
+                                                                   Time=datetime.datetime.now())
+                    notification.save()
+
                     return HttpResponse(json.dumps({'message': 'Like Recorded!'}))
                 else:
                     return HttpResponse(json.dumps({'message': 'This user has already liked this post!'}))
@@ -831,6 +875,9 @@ def api_savecomment(request):
                 post = posts[0]
                 new_comment = ApiComments.objects.create(PostId=post, CommentorId=user, Comment=comment,
                                                          Time=datetime.datetime.now())
+                notification = ApiNotifications.objects.create(Receiver=post.Poster, Sender=user.username, Content=" commented on your post.",
+                                                               Time=datetime.datetime.now())
+                notification.save()
                 return HttpResponse(json.dumps({'message': 'Comment Recorded!'}))
             else:
                 return HttpResponse(json.dumps({'message': 'Invalid Post!'}))
@@ -878,10 +925,18 @@ def api_requestresponse(request):
                 t1 = ApiFriendship.objects.create(Friend_1=user1, Friend_2=user2)
                 t1 = ApiFriendship.objects.create(Friend_1=user2, Friend_2=user1)
                 r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
+                notification = ApiNotifications.objects.create(Receiver=user1.username, Sender=user2.username,
+                                                               Content=" accepted your friend request.",
+                                                               Time=datetime.datetime.now())
+                notification.save()
                 r1.delete()
                 return HttpResponse(json.dumps({'message': 'Request accepted!'}))
             elif response == 'Reject':
                 r1 = ApiFriendRequests.objects.get(Sender=user1, Receiver=user2)
+                notification = ApiNotifications.objects.create(Receiver=user1.username, Sender=user2.username,
+                                                               Content=" rejected your friend request.",
+                                                               Time=datetime.datetime.now())
+                notification.save()
                 r1.delete()
                 return HttpResponse(json.dumps({'message': 'Request rejected!'}))
         else:
@@ -995,6 +1050,11 @@ def api_setprivacy(request):
 
                     privacy.save(
                         update_fields=['ShowAge', 'ShowAddress', 'ShowPosts', 'ShowPhone', 'ShowEmail', 'ShowGender'])
+
+                    notification = ApiNotifications.objects.create(Receiver=thisuser.username, Sender="FastNet",
+                                                                   Content=" has applied your new privacy settings.",
+                                                                   Time=datetime.datetime.now())
+                    notification.save()
                     return HttpResponse(json.dumps({'message': 'Privacy Updated!'}))
                 except Exception as e:
                     return HttpResponse(json.dumps({'message': 'Enter All Privacy Fields!'}))
@@ -1004,6 +1064,7 @@ def api_setprivacy(request):
             return HttpResponse(json.dumps({'message': 'No Such User Exists!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
 
 @csrf_exempt
 def api_updatetimetable(request):
@@ -1021,17 +1082,23 @@ def api_updatetimetable(request):
             csv_data = file_data.split('\n')
             for x in csv_data:
                 fields = x.split(',')
-                if len(fields)==7:
-                    FinalTimetable=ApiTimetable.objects.create(Dept=fields[0], CourseCode=fields[1], CourseName=fields[2],
+                if len(fields) == 7:
+                    FinalTimetable = ApiTimetable.objects.create(Dept=fields[0], CourseCode=fields[1], CourseName=fields[2],
                                                                 Day=fields[3], Venue=fields[4], StartsAt=fields[5],
                                                                 EndsAt=fields[6].replace('\r',''))
-
+            for user in User.objects.all():
+                notification = ApiNotifications.objects.create(Receiver=user.username, Sender="FastNet",
+                                                               Content=" has updated the Time Table.",
+                                                               Time=datetime.datetime.now())
+                notification.save()
 
             return HttpResponse(json.dumps({'message':'Timetable Updated'}))
         else:
             return HttpResponse(json.dumps({'message': 'File Not Found!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
 def api_gettimetable(request):
     try:
         key = request.GET['api-key']

@@ -4,10 +4,10 @@ from django.contrib.auth.models import User as user
 # Create your models here.
 
 ComplainStatusChoices = (
-        ('1', 'Submitted'),
-        ('2', 'Accepted'),
-        ('3', 'Rejected')
-    )
+    ('1', 'Submitted'),
+    ('2', 'Accepted'),
+    ('3', 'Rejected')
+)
 
 
 class ApiPerson(models.Model):
@@ -33,6 +33,7 @@ class ApiGroup(models.Model):
     Name = models.CharField(max_length=100)
     Description = models.CharField(max_length=2048)
     Archived = models.BooleanField(default=False)
+
     def __str__(self):
         return self.Name
 
@@ -56,12 +57,12 @@ class ApiLikes(models.Model):
 class ApiComments(models.Model):
     PostId = models.ForeignKey(ApiPost, on_delete=models.CASCADE)
     CommentorId = models.ForeignKey(user, on_delete=models.DO_NOTHING)
-    Comment = models.CharField(max_length=1024, null= False)
+    Comment = models.CharField(max_length=1024, null=False)
     Time = models.DateTimeField(null=False)
 
 
 class ApiGroupMembers(models.Model):
-    GroupId = models.CharField(max_length=100,primary_key=True)
+    GroupId = models.CharField(max_length=100)
     UserId = models.CharField(max_length=100)
 
 
@@ -77,6 +78,7 @@ class ApiComplain(models.Model):
     ComplainStatus = models.CharField(max_length=500, choices=ComplainStatusChoices)
     Complainer = models.CharField(max_length=200)
     Time = models.DateTimeField()
+
     def __str__(self):
         return str(self.Complainer) + "-" + str(self.Complain) + "-" + str(self.ComplainStatus)
 
@@ -116,3 +118,13 @@ class ApiTimetable(models.Model):
     Venue = models.CharField(max_length=15)
     StartsAt = models.CharField(max_length=5)
     EndsAt = models.CharField(max_length=5)
+
+
+class ApiNotifications(models.Model):
+    Receiver = models.CharField(max_length=50)
+    Sender = models.CharField(max_length=50)
+    Content = models.CharField(max_length=2048)
+    Time = models.DateTimeField(null=False)
+
+    def __str__(self):
+        return str(self.Sender) + str(self.Content)
