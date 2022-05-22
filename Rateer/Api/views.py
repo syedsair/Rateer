@@ -1304,3 +1304,28 @@ def api_getspecificpost(request):
             return HttpResponse(json.dumps({'message': 'Invalid Post Id!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_getnotifications(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        username = request.GET['username']
+        users = User.objects.filter(username=username)
+        if len(users) > 0:
+            notifications = ApiNotifications.objects.filter(Receiver=username)
+            all_notifications = []
+            for notification in notifications:
+                d = {}
+                d['Sender'] = notification.Sender
+                d['Content'] = notification.Content
+                d['Time'] = str(notification.Time)
+                all_notifications.append(d)
+            return HttpResponse(json.dumps({'notifications': all_notifications}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid Username!'}))
+
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
