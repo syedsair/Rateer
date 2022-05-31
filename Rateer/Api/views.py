@@ -7,6 +7,7 @@ from .models import (ApiPerson, ApiFriendship, ApiFriendRequests, ApiGroup, ApiG
                      ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy, ApiTimetable,
                      ApiNotifications)
 import datetime
+from django.contrib.auth.hashers import check_password
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
@@ -1325,6 +1326,34 @@ def api_getnotifications(request):
                 d['Time'] = str(notification.Time)
                 all_notifications.append(d)
             return HttpResponse(json.dumps({'notifications': all_notifications}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Invalid Username!'}))
+
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_resetpassword(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        email = request.GET['email']
+        oldpass = request.GET['oldpassword']
+        newpass = request.GET['newpassword']
+        users = User.objects.filter(email=email)
+        if len(users) > 0:
+            user = users[0]
+            if check_password(oldpass, user.password):
+                user.set_password(newpass)
+                user.save()
+                person = ApiPerson.objects.filter(ThisUser=user)[0]
+                person.RawPassword = newpass
+                person.save(update_fields=['RawPassword'])
+                return HttpResponse(json.dumps({'message': 'Password Changed!'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Invalid Old Password!'}))
         else:
             return HttpResponse(json.dumps({'message': 'Invalid Username!'}))
 
