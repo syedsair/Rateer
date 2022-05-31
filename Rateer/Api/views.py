@@ -704,13 +704,14 @@ def api_listusers(request):
         for u in users:
             final_user = u
             name_ = ApiPerson.objects.filter(ThisUser=final_user)
-            if (len(name_) != 0):
+            if len(name_) != 0:
                 name = name_[0].Name
-                data = {
-                    'name': name,
-                    'email': u.email
-                }
-                lst.append(data)
+                if str(name_[0].Role).lower() != "admin":
+                    data = {
+                        'name': name,
+                        'email': u.email
+                    }
+                    lst.append(data)
 
         return HttpResponse(json.dumps({"users": lst}))
     else:
@@ -1225,7 +1226,7 @@ def api_specificuserposts(request):
         users = User.objects.filter(email=email)
         if len(users) > 0:
             user = users[0]
-            posts = ApiPost.objects.filter(Poster=user.username)
+            posts = ApiPost.objects.filter(Poster=user.email)
             lis = []
             for i in range(len(posts)):
                 d = {}
@@ -1315,7 +1316,7 @@ def api_getnotifications(request):
         username = request.GET['username']
         users = User.objects.filter(username=username)
         if len(users) > 0:
-            notifications = ApiNotifications.objects.filter(Receiver=username)
+            notifications = ApiNotifications.objects.filter(Receiver=username).order_by('Time')
             all_notifications = []
             for notification in notifications:
                 d = {}
