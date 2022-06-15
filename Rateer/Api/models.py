@@ -128,3 +128,20 @@ class ApiNotifications(models.Model):
 
     def __str__(self):
         return str(self.Sender) + str(self.Content)
+
+
+class ApiRegistration(models.Model):
+    StudentId = models.CharField(max_length=50)
+    CourseId = models.CharField(max_length=50)
+    Dept = models.CharField(max_length=10)
+    def __str__(self):
+        return str(self.StudentId) + str(self.Dept) + str(self.CourseId)
+
+class ApiFilters(models.Model):
+    GroupId = models.IntegerField()
+    Batch = models.CharField(max_length=10)
+    Dept = models.CharField(max_length=20)
+    Less_Workload = models.BooleanField(default=False)
+    Clashes = models.BooleanField(default=False)
+
+

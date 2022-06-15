@@ -5,7 +5,7 @@ import json
 from django.contrib.auth.models import User
 from .models import (ApiPerson, ApiFriendship, ApiFriendRequests, ApiGroup, ApiGroupMembers, ApiPost,
                      ApiGroupPosts, ApiComplain, ApiMessage, ApiLikes, ApiComments, ApiPrivacy, ApiTimetable,
-                     ApiNotifications)
+                     ApiNotifications, ApiRegistration, ApiFilters)
 import datetime
 from django.contrib.auth.hashers import check_password
 from django.core.mail import EmailMultiAlternatives
@@ -1359,3 +1359,91 @@ def api_resetpassword(request):
 
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_register(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        studentid = request.GET['StudentId']
+        courseid = request.GET['CourseId']
+        dept = request.GET['Dept']
+        users = User.objects.filter(username=studentid)
+        if len(users) > 0:
+            courses = ApiTimetable.objects.filter(Dept=dept).filter(CourseCode=courseid)
+            if len(courses) > 0:
+                reg = ApiRegistration.objects.filter(StudentId=studentid).filter(Dept=dept).filter(CourseId=courseid)
+                if len(reg) > 0:
+                    return HttpResponse(json.dumps({'message':'Student already Registered in this course!'}))
+                else:
+                    registration = ApiRegistration.objects.create(StudentId=studentid,Dept=dept,CourseId=courseid).save()
+                    return HttpResponse(json.dumps({'message': 'Student registered in the specified course!'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Course not found!'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'Student not found!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!'}))
+
+
+def api_getclashes(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        studentid = request.GET['StudentId']
+        reg_courses = ApiRegistration.objects.filter(StudentId=studentid)
+        data=[]
+        if len(reg_courses) > 0:
+            for x in range(len(reg_courses)-1):
+                firstcourse = ApiTimetable.objects.get(CourseCode=reg_courses[x].CourseId)
+                print(firstcourse.StartsAt)
+                for y in range(x+1,len(reg_courses)):
+                    secondcourse = ApiTimetable.objects.get(CourseCode=reg_courses[y].CourseId)
+                    print(secondcourse.StartsAt)
+                    if firstcourse.Day == secondcourse.Day and firstcourse.StartsAt == secondcourse.StartsAt:
+                        clashes={}
+                        clashes['Course1'] = firstcourse.CourseCode
+                        clashes['Course2'] = secondcourse.CourseCode
+                        data.append(clashes)
+            return HttpResponse(json.dumps(data))
+        else:
+            return HttpResponse(json.dumps({'message': 'No Courses registered against the student!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!!'}))
+
+def api_applyfilters(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        groupId = request.GET['groupid']
+        batch = request.GET['batch']
+        dept = request.GET['dept']
+        less_workload = request.GET['lessworkload']
+        clash = request.GET['clash']
+        filtered_groups = ApiFilters.objects.filter(GroupId=groupId)
+        if len(filtered_groups)>0:
+            ## group filters already exist ##
+            final_group = filtered_groups[0]
+            final_group.Batch = batch
+            final_group.Dept = dept
+            final_group.Less_Workload = less_workload
+            final_group.Clashes = clash
+            final_group.save(update_fields=['Batch','Dept','Less_Workload','Clashes'])
+            return HttpResponse(json.dumps({'message': 'Filters Applied'}))
+        else:
+            found_group = ApiGroup.objects.filter(GroupId=groupId)
+            if len(found_group)>0 :
+                final_group = ApiFilters.objects.create(GroupId=groupId,Batch=batch,Dept=dept,Less_Workload=less_workload,
+                                                        Clashes=clash)
+                final_group.save()
+                return HttpResponse(json.dumps({'message': 'Filters Applied'}))
+            else:
+                return HttpResponse(json.dumps({'message': 'Group does not exist!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!!'}))
