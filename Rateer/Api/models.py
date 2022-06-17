@@ -23,6 +23,7 @@ class ApiPerson(models.Model):
     RawPassword = models.CharField(max_length=300)
     Name = models.CharField(max_length=1024)
     Gender = models.CharField(max_length=10)
+    Dept = models.CharField(max_length=30)
 
     def __str__(self):
         return self.ThisUser.username

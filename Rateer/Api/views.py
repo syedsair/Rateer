@@ -36,6 +36,7 @@ def api_signup(request):
         phone = request.GET['phone']
         role = request.GET['role']
         gender = request.GET['gender']
+        dept = request.GET['dept']
         rollno = email.split('@')[0]
         message = ""
         users = User.objects.filter(email=email)
@@ -43,7 +44,7 @@ def api_signup(request):
 
             user = User.objects.create_user(rollno, email, password)
             person = ApiPerson.objects.create(ThisUser=user, Age=age, Status=status, Name=name, Address=address,
-                                              RawPassword=password, Phone=phone, Role=role, Gender=gender)
+                                              RawPassword=password, Phone=phone, Role=role, Gender=gender, Dept=dept)
             privacy = ApiPrivacy.objects.create(ThisUser=user)
             message = "User Created!"
         else:
@@ -93,6 +94,7 @@ def api_authenticate(request):
                 data['address'] = final_person.Address
                 data['phone'] = final_person.Phone
                 data['gender'] = final_person.Gender
+                data['dept'] = final_person.Dept
             else:
                 message = "User Blocked by Admin!"
         else:
@@ -1445,5 +1447,21 @@ def api_applyfilters(request):
                 return HttpResponse(json.dumps({'message': 'Filters Applied'}))
             else:
                 return HttpResponse(json.dumps({'message': 'Group does not exist!'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!!'}))
+
+
+def api_islessworkload(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        userid = request.GET['userid']
+        workload = ApiRegistration.objects.filter(StudentId=userid)
+        if len(workload) < 5:
+            return HttpResponse(json.dumps({'message': 'True'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'False'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!!'}))
