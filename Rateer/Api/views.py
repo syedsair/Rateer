@@ -11,6 +11,7 @@ from django.contrib.auth.hashers import check_password
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.utils import timezone
+from itertools import chain
 
 # API Key
 API_KEY = "5f8641f6-c4e8-490d-b619-2d8bf20d3786"
@@ -96,7 +97,7 @@ def api_authenticate(request):
                 data['gender'] = final_person.Gender
                 data['dept'] = final_person.Dept
             else:
-                message = "User Blocked by Admin!"
+                data['message'] = "User Blocked by Admin!"
         else:
             data['message'] = "Invalid Credentials!"
         return HttpResponse(json.dumps(data))
@@ -512,23 +513,26 @@ def api_savecomplain(request):
     if key == API_KEY:
         message = ''
         try:
-            posting_time = datetime.datetime.now()
             userId = request.GET["username"]
-            complain = request.GET["complain"]
-            title = request.GET['title']
-            status = "Submitted"
-            ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status,
-                                       Time=posting_time).save()
-            message = 'Complain Recorded!'
+            users = User.objects.filter(username=userId)
+            if len(users)>0:
+                posting_time = datetime.datetime.now()
+                complain = request.GET["complain"]
+                title = request.GET['title']
+                status = "Submitted"
+                ApiComplain.objects.create(Complain=complain, Complainer=userId, Title=title, ComplainStatus=status,
+                                           Time=posting_time).save()
+                message = 'Complain Recorded!'
 
-            time = datetime.datetime.now()
-            sender = "FastNet"
-            content = " received your complain."
+                time = datetime.datetime.now()
+                sender = "FastNet"
+                content = " received your complain."
 
-            notification = ApiNotifications.objects.create(Receiver=userId, Sender=sender, Content=content,
-                                                           Time=time)
-            notification.save()
-
+                notification = ApiNotifications.objects.create(Receiver=userId, Sender=sender, Content=content,
+                                                               Time=time)
+                notification.save()
+            else:
+                message = 'Username does not exist!'
         except Exception as e:
             message = 'Please Try Again Later!'
         return HttpResponse(json.dumps({'message': message}))
@@ -549,6 +553,7 @@ def api_getcomplains(request):
         for complainObj in complainObjects:
             d = {
                 'complainid': complainObj.ComplainId,
+                'complainer': complainObj.Complainer,
                 'title': complainObj.Title,
                 'complain': complainObj.Complain,
                 'complainstatus': complainObj.ComplainStatus,
@@ -1319,7 +1324,16 @@ def api_getnotifications(request):
         username = request.GET['username']
         users = User.objects.filter(username=username)
         if len(users) > 0:
-            notifications = ApiNotifications.objects.filter(Receiver=username).order_by('Time')
+            final_user = ApiPerson.objects.get(ThisUser=users[0])
+            if str(final_user.Role).lower() == "admin":
+                notification1 = ApiNotifications.objects.filter(Sender="FastNet").filter(Content=" received your complain.")
+                for n in notification1:
+                    n.Content = " received new complain."
+            notification2 = ApiNotifications.objects.filter(Receiver=username)
+            if str(final_user.Role).lower() == "admin":
+                notifications = sorted(chain(notification1, notification2), key=lambda instance: instance.Time)
+            else:
+                notifications = notification2.order_by('Time')
             all_notifications = []
             for notification in notifications:
                 d = {}
