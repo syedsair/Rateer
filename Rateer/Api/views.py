@@ -279,11 +279,28 @@ def api_listgroups(request):
         }
         lis = []
         for i in range(len(groups)):
-            current_group = {
-                'Group Name': groups[i].Name,
-                'Group Description': groups[i].Description,
-                'Archived Status': groups[i].Archived
-            }
+            restrictions = ApiFilters.objects.filter(GroupId=groups[i].Name)
+            if len(restrictions)>0:
+                dic = {
+                    'Department' : restrictions[0].Dept,
+                    'Batch' : restrictions[0].Batch,
+                    'Less Workload' : restrictions[0].Less_Workload,
+                    'Clashes' : restrictions[0].Clashes
+                }
+                current_group = {
+                    'Group Name': groups[i].Name,
+                    'Group Description': groups[i].Description,
+                    'Archived Status': groups[i].Archived,
+                    'Restrictions' : dic
+                }
+            else:
+                dic = {}
+                current_group = {
+                    'Group Name': groups[i].Name,
+                    'Group Description': groups[i].Description,
+                    'Archived Status': groups[i].Archived,
+                    'Restrictions' : dic
+                }
             lis.append(current_group)
         data['groups'] = lis
         return HttpResponse(json.dumps(data))
@@ -1453,7 +1470,7 @@ def api_applyfilters(request):
             final_group.save(update_fields=['Batch','Dept','Less_Workload','Clashes'])
             return HttpResponse(json.dumps({'message': 'Filters Applied'}))
         else:
-            found_group = ApiGroup.objects.filter(GroupId=groupId)
+            found_group = ApiGroup.objects.filter(Name=groupId)
             if len(found_group)>0 :
                 final_group = ApiFilters.objects.create(GroupId=groupId,Batch=batch,Dept=dept,Less_Workload=less_workload,
                                                         Clashes=clash)
@@ -1477,5 +1494,22 @@ def api_islessworkload(request):
             return HttpResponse(json.dumps({'message': 'True'}))
         else:
             return HttpResponse(json.dumps({'message': 'False'}))
+    else:
+        return HttpResponse(json.dumps({'message': 'Invalid Api Key!!'}))
+
+def api_removefilters(request):
+    try:
+        key = request.GET['api-key']
+    except Exception as e:
+        return HttpResponse(json.dumps({'message': 'Please provide api-key!'}))
+    if key == API_KEY:
+        groupid =request.GET['groupid']
+        restrictions = ApiFilters.objects.filter(GroupId=groupid)
+        if len(restrictions)>0:
+            for i in range(len(restrictions)):
+                restrictions[i].delete()
+            return HttpResponse(json.dumps({'message': 'Filters Removed'}))
+        else:
+            return HttpResponse(json.dumps({'message': 'No filters were found!'}))
     else:
         return HttpResponse(json.dumps({'message': 'Invalid Api Key!!'}))

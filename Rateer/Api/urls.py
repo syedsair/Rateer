@@ -9,7 +9,7 @@ from .views import (IndexView, api_authenticate, api_creategroup, api_joingroup,
                     api_deletepost, api_deletegroup, api_setprivacy, api_chatupdate, api_updatetimetable,
                     api_gettimetable, api_saveunlike, api_getrequests, api_updatepersonalinformation,
                     api_specificuserposts, api_getspecificpost, api_getnotifications, api_resetpassword,
-                    api_register, api_getclashes, api_applyfilters, api_islessworkload)
+                    api_register, api_getclashes, api_applyfilters, api_islessworkload, api_removefilters)
 app_name = "Api"
 urlpatterns = [
     path('', IndexView, name="IndexView"),
@@ -60,5 +60,6 @@ urlpatterns = [
     path('resetpassword', api_resetpassword, name="ResetPassword"),
     path('getclashes', api_getclashes, name="GetClashes"),
     path('applyfilters', api_applyfilters, name="ApplyFilters"),
-    path('islessworkload', api_islessworkload, name="IsLessWorkload")
+    path('islessworkload', api_islessworkload, name="IsLessWorkload"),
+    path('removefilters', api_removefilters, name="RemoveFilters")
 ]

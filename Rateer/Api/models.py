@@ -139,7 +139,7 @@ class ApiRegistration(models.Model):
         return str(self.StudentId) + str(self.Dept) + str(self.CourseId)
 
 class ApiFilters(models.Model):
-    GroupId = models.IntegerField()
+    GroupId = models.CharField(max_length=20)
     Batch = models.CharField(max_length=10)
     Dept = models.CharField(max_length=20)
     Less_Workload = models.BooleanField(default=False)
